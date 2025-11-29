@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Online Banking System</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container dashboard-container">
+        <div class="welcome-section">
+            <h1>Welcome Back!</h1>
+            <p id="usernameDisplay">Loading...</p>
+        </div>
+
+        <div class="balance-card">
+            <div class="balance-label">Account Balance</div>
+            <div class="balance-amount" id="balanceDisplay">Rs 0.00</div>
+        </div>
+
+        <div class="nav-menu">
+            <a href="deposit.html" class="nav-item">
+                <span class="nav-item-icon">💰</span>
+                <span>Deposit</span>
+            </a>
+            <a href="withdraw.html" class="nav-item">
+                <span class="nav-item-icon">💸</span>
+                <span>Withdraw</span>
+            </a>
+            <a href="history.html" class="nav-item">
+                <span class="nav-item-icon">📊</span>
+                <span>Transaction History</span>
+            </a>
+            <a href="#" id="logoutBtn" class="nav-item">
+                <span class="nav-item-icon">🚪</span>
+                <span>Logout</span>
+            </a>
+        </div>
+    </div>
+
+    <script src="js/init.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
+

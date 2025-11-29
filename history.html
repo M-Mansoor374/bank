@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction History - Online Banking System</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container dashboard-container">
+        <h1>📊 Transaction History</h1>
+        <p class="subtitle">View all your account transactions</p>
+        
+        <div id="transactionsContainer">
+            <table class="transactions-table">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Description</th>
+                        <th>Date & Time</th>
+                    </tr>
+                </thead>
+                <tbody id="transactionsBody">
+                    <!-- Transactions will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <div class="empty-state-icon">📭</div>
+            <h3>No Transactions Yet</h3>
+            <p>Your transaction history will appear here</p>
+        </div>
+
+        <a href="dashboard.html" class="btn" style="text-decoration: none; display: block; text-align: center; margin-top: 20px;">Back to Dashboard</a>
+    </div>
+    
+    <script src="js/init.js"></script>
+    <script src="js/history.js"></script>
+</body>
+</html>
+
