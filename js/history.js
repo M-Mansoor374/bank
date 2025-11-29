@@ -1,6 +1,6 @@
 /**
  * Transaction History Page JavaScript
- * Displays all transaction history from localStorage
+ * Displays all transaction history from backend API
  */
 
 (function() {
@@ -9,28 +9,66 @@
     // Wait for DOM to be fully loaded
     document.addEventListener('DOMContentLoaded', function() {
         // Check if user is logged in
-        if (localStorage.getItem('loggedIn') !== 'true') {
+        if (!localStorage.getItem('token')) {
             window.location.href = 'index.html';
             return;
         }
 
-        // Display transactions
-        displayTransactions();
+        // Load and display transactions from backend
+        loadTransactions();
     });
 
     /**
-     * Display all transactions in a table
+     * Load transactions from backend API
      */
-    function displayTransactions() {
+    async function loadTransactions() {
+        try {
+            const token = localStorage.getItem('token');
+            
+            const response = await fetch('http://localhost:8080/transactions', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                }
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    // Token invalid, redirect to login
+                    localStorage.removeItem('token');
+                    window.location.href = 'index.html';
+                    return;
+                }
+                throw new Error(data.message || 'Failed to load transactions');
+            }
+
+            // Display transactions
+            if (data.success && data.data && data.data.transactions) {
+                displayTransactions(data.data.transactions);
+            } else {
+                displayTransactions([]);
+            }
+        } catch (error) {
+            console.error('Transaction history error:', error);
+            // Show empty state on error
+            displayTransactions([]);
+        }
+    }
+
+    /**
+     * Display all transactions in a table
+     * @param {Array} transactions - Array of transaction objects
+     */
+    function displayTransactions(transactions) {
         const transactionsBody = document.getElementById('transactionsBody');
         const emptyState = document.getElementById('emptyState');
         const transactionsContainer = document.getElementById('transactionsContainer');
 
-        // Get transactions from localStorage
-        const transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
-
         // Check if there are any transactions
-        if (transactions.length === 0) {
+        if (!transactions || transactions.length === 0) {
             transactionsContainer.style.display = 'none';
             emptyState.style.display = 'block';
             return;

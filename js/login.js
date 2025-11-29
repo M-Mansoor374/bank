@@ -14,7 +14,7 @@
         const passwordInput = document.getElementById('password');
 
         // Check if user is already logged in
-        if (localStorage.getItem('loggedIn') === 'true') {
+        if (localStorage.getItem('token')) {
             window.location.href = 'dashboard.html';
             return;
         }
@@ -33,36 +33,73 @@
                 return;
             }
 
-            // Get stored credentials
-            const storedCredentials = JSON.parse(localStorage.getItem('userCredentials') || '{}');
-            
-            // Validate credentials
-            if (username === storedCredentials.username && password === storedCredentials.password) {
-                // Login successful
-                localStorage.setItem('loggedIn', 'true');
-                localStorage.setItem('currentUser', username);
-                
-                // Redirect to dashboard
-                window.location.href = 'dashboard.html';
-            } else {
-                // Login failed
-                showError('Invalid username or password. Please try again.');
-                passwordInput.value = '';
-            }
+            // Call backend API
+            loginUser(username, password);
         });
+
+        /**
+         * Login user via backend API
+         * @param {string} username - Username
+         * @param {string} password - Password
+         */
+        async function loginUser(username, password) {
+            try {
+                showError(''); // Clear previous errors
+                
+                const response = await fetch('http://localhost:8080/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    showError(data.message || 'Invalid username or password. Please try again.');
+                    passwordInput.value = '';
+                    return;
+                }
+
+                // Login successful - store token and user info
+                if (data.success && data.data) {
+                    localStorage.setItem('token', data.data.token);
+                    localStorage.setItem('currentUser', data.data.username);
+                    localStorage.setItem('accountId', data.data.accountId);
+                    localStorage.setItem('balance', data.data.balance.toString());
+                    
+                    // Redirect to dashboard
+                    window.location.href = 'dashboard.html';
+                } else {
+                    showError('Login failed. Please try again.');
+                    passwordInput.value = '';
+                }
+            } catch (error) {
+                showError('Connection error. Please make sure the backend server is running.');
+                console.error('Login error:', error);
+            }
+        }
 
         /**
          * Display error message
          * @param {string} message - Error message to display
          */
         function showError(message) {
-            errorMessage.textContent = message;
-            errorMessage.classList.add('show');
-            
-            // Hide error message after 5 seconds
-            setTimeout(function() {
+            if (message) {
+                errorMessage.textContent = message;
+                errorMessage.classList.add('show');
+                
+                // Hide error message after 5 seconds
+                setTimeout(function() {
+                    errorMessage.classList.remove('show');
+                }, 5000);
+            } else {
                 errorMessage.classList.remove('show');
-            }, 5000);
+            }
         }
     });
 })();

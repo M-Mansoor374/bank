@@ -9,7 +9,7 @@
     // Wait for DOM to be fully loaded
     document.addEventListener('DOMContentLoaded', function() {
         // Check if user is logged in
-        if (localStorage.getItem('loggedIn') !== 'true') {
+        if (!localStorage.getItem('token')) {
             window.location.href = 'index.html';
             return;
         }
@@ -35,54 +35,65 @@
                 return;
             }
 
-            // Process deposit
+            // Process deposit via backend API
             processDeposit(amount);
         });
     });
 
     /**
-     * Process deposit transaction
+     * Process deposit transaction via backend API
      * @param {number} amount - Amount to deposit
      */
-    function processDeposit(amount) {
-        // Get current balance
-        let currentBalance = parseFloat(localStorage.getItem('balance') || '0');
-        
-        // Update balance
-        currentBalance += amount;
-        localStorage.setItem('balance', currentBalance.toString());
+    async function processDeposit(amount) {
+        try {
+            const token = localStorage.getItem('token');
+            
+            const response = await fetch('http://localhost:8080/deposit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({
+                    amount: amount.toString()
+                })
+            });
 
-        // Create transaction record
-        const transaction = {
-            type: 'Deposit',
-            amount: amount,
-            timestamp: new Date().toISOString(),
-            description: `Deposited Rs ${amount.toFixed(2)}`
-        };
+            const data = await response.json();
 
-        // Add transaction to history
-        addTransaction(transaction);
+            if (!response.ok) {
+                if (response.status === 401) {
+                    // Token invalid, redirect to login
+                    localStorage.removeItem('token');
+                    window.location.href = 'index.html';
+                    return;
+                }
+                showError(data.message || 'Deposit failed. Please try again.');
+                return;
+            }
 
-        // Show success message
-        showSuccess(`Successfully deposited Rs ${amount.toFixed(2)}. New balance: Rs ${currentBalance.toFixed(2)}`);
-        
-        // Clear form
-        document.getElementById('amount').value = '';
+            // Deposit successful
+            if (data.success && data.data) {
+                // Update local balance
+                localStorage.setItem('balance', data.data.newBalance.toString());
+                
+                // Show success message
+                showSuccess(data.data.message || `Successfully deposited Rs ${amount.toFixed(2)}. New balance: Rs ${data.data.newBalance.toFixed(2)}`);
+                
+                // Clear form
+                document.getElementById('amount').value = '';
 
-        // Redirect to dashboard after 2 seconds
-        setTimeout(function() {
-            window.location.href = 'dashboard.html';
-        }, 2000);
-    }
-
-    /**
-     * Add transaction to history
-     * @param {Object} transaction - Transaction object
-     */
-    function addTransaction(transaction) {
-        let transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
-        transactions.push(transaction);
-        localStorage.setItem('transactions', JSON.stringify(transactions));
+                // Redirect to dashboard after 2 seconds
+                setTimeout(function() {
+                    window.location.href = 'dashboard.html';
+                }, 2000);
+            } else {
+                showError('Deposit failed. Please try again.');
+            }
+        } catch (error) {
+            showError('Connection error. Please make sure the backend server is running.');
+            console.error('Deposit error:', error);
+        }
     }
 
     /**
